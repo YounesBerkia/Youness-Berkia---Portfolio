@@ -1,0 +1,548 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: none;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: white;
+    overflow-x: hidden;
+}
+
+.section {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    flex-direction: column;
+}
+
+.hero-section {
+    background-color: white;
+}
+
+/* Subtle animated chart background behind hero text */
+.chart-bg {
+    position: absolute;
+    left: 50%;
+    top: 28%;                    /* sits behind the name */
+    transform: translateX(-50%);
+    width: 92%;
+    height: 140px;
+    pointer-events: none;
+    z-index: 0;                  /* behind text */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.18;               /* slightly more visible */
+    filter: blur(0.4px) saturate(0.9);
+}
+
+/* Network of small chart nodes arrayed around the headline */
+.chart-network {
+    position: absolute;
+    inset: 0; /* fill hero */
+    pointer-events: none;
+    z-index: 0;
+}
+
+.chart-node {
+    position: absolute;
+    width: 96px;   /* default node size, will be scaled */
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center;
+    transition: transform 220ms cubic-bezier(.2,.9,.3,1);
+    opacity: 0.95;
+}
+
+.chart-node .chart-bars { /* node-specific smaller bar cluster */
+    max-width: unset;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.chart-node .chart-item .chart-bar {
+    width: 6px;
+    height: 40px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.36), rgba(0,0,0,0.08));
+}
+
+/* node label inside small nodes */
+.chart-node .chart-label {
+    font-size: 0.65rem;
+    bottom: -16px;
+    color: rgba(0,0,0,0.75);
+}
+
+/* svg network lines */
+.chart-net-lines {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.chart-net-lines line {
+    stroke: rgba(0,0,0,0.08);
+    stroke-width: 1.5;
+    transition: stroke-width 120ms ease, stroke 120ms ease, opacity 160ms ease;
+}
+
+/* nodes lightly emphasize when active */
+.chart-node.active { transform: translateY(-6px) scale(1.02); }
+
+@media (max-width: 820px) {
+    .chart-node { width: 72px; height: 72px; }
+    .chart-node .chart-item .chart-bar { height: 32px; }
+}
+
+@media (max-width: 520px) {
+    .chart-net-lines, .chart-node { display: none; }
+}
+
+.chart-bars {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px; /* slightly more breathing */
+    justify-content: center;
+}
+
+.chart-item {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    position: relative;
+}
+
+.chart-bar {
+    width: 8px;               /* wider for visibility */
+    height: 66px; /* a bit taller base */
+    background: linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.06));
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12), inset 0 -6px 14px rgba(255,255,255,0.03);
+    border-radius: 4px;
+    transform-origin: bottom center;
+    will-change: transform, opacity;
+    transition: transform 220ms cubic-bezier(0.22, 0.9, 0.3, 1), opacity 160ms ease, box-shadow 200ms ease;
+    opacity: 0.98;
+}
+
+.chart-item .chart-label {
+    position: absolute;
+    bottom: -18px; /* sits beneath the bar */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    color: rgba(0,0,0,0.7);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+    transition: transform 160ms ease, color 160ms ease, opacity 160ms ease;
+    white-space: nowrap;
+    opacity: 0.9;
+}
+
+/* when bar grows show label slightly bolder */
+.chart-item.active .chart-label {
+    transform: translateX(-50%) translateY(-4px) scale(1.02);
+    color: rgba(0,0,0,0.95);
+    opacity: 1;
+}
+
+/* Make sure main text is above the background */
+.hero-section h1,
+.hero-section h2 {
+    position: relative;
+    z-index: 1;
+}
+
+/* Smaller screens - scale down the chart */
+@media (max-width: 820px) {
+    .chart-bg { top: 30%; height: 110px; opacity: 0.1; }
+    .chart-bar { width: 5px; height: 44px; gap: 8px; }
+}
+
+@media (max-width: 520px) {
+    .chart-bg { display: none; } /* hide on very small screens to avoid clutter */
+}
+
+.video-section {
+    background-color: white;
+    flex-direction: row;
+    padding: 80px 40px;
+    gap: 60px;
+}
+
+.video-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 500px;
+}
+
+.video-container video {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.video-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 600px;
+}
+
+.video-text h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+/* Scramble animation for 'Statistische Bundesamt' */
+#sb-animated { display: inline-block; white-space: nowrap; font-variation-settings: 'wght' 700; }
+.sb-char {
+    display: inline-block;
+    min-width: 0.62ch; /* keep fixed widths to avoid jumping */
+    transition: transform 200ms ease, color 320ms ease, opacity 260ms ease;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+}
+
+/* When the phrase is scrambling, move the surrounding text slightly outward to avoid layout jitter */
+.video-text h2 { transition: transform 260ms ease; }
+.video-text h2.scrambling .sb-before { transform: translateX(-8px) translateY(-2px); opacity: 0.92; }
+.video-text h2.scrambling .sb-after { transform: translateX(8px) translateY(-2px); opacity: 0.92; }
+.video-text h2 .sb-before, .video-text h2 .sb-after { display: inline-block; transition: transform 240ms ease, opacity 240ms ease; }
+.sb-char.scramble { color: rgba(0,0,0,0.45); transform: translateY(-2px); }
+.sb-char.resolved { color: rgba(0,0,0,0.95); transform: translateY(0); }
+
+.video-text p {
+    font-size: 1.1rem;
+    color: #666;
+    line-height: 1.8;
+}
+
+/* Audio bar styles - black & white, rounded */
+.audio-bar {
+    margin-top: 50px;            /* smaller distance from text */
+    display: flex;
+    align-items: center;
+    gap: 5px;                  /* tighter spacing */
+    background: #00000094; /* black */
+    color: #fff; /* white text */
+    padding: 4px 20px;         /* thinner height */
+    border-radius: 10px;       /* slightly smaller rounding */
+    max-width: 550px;          /* narrower */
+    width: 100%;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.14);
+}
+
+.audio-bar .audio-play {
+    background: #fff;
+    color: #000000;
+    border-radius: 50%;
+    width: 25px;                /* smaller button */
+    height: 25px;              /* smaller button */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* icon inside is handled via .audio-icon */
+    border: none;
+    cursor: pointer;
+    transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.audio-play .audio-icon {
+    /* default: triangle play */
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 7px solid #000; /* black triangle */
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    transition: all 120ms linear;
+}
+
+/* playing state: two thin vertical bars */
+.audio-play.playing .audio-icon {
+    width: 14px;
+    height: 14px;
+    border: none;
+    position: relative;
+}
+
+.audio-play.playing .audio-icon::before,
+.audio-play.playing .audio-icon::after {
+    content: '';
+    position: absolute;
+    width: 2px;                /* THIN bars */
+    height: 14px;
+    background: #000;
+    top: 0;
+    border-radius: 1px;
+}
+
+.audio-play.playing .audio-icon::before { left: 2px; }
+.audio-play.playing .audio-icon::after { right: 2px; }
+
+.audio-bar .audio-play:active {
+    transform: scale(0.94);
+}
+
+.audio-progress-wrap {
+    flex: 1;
+    height: 6px;               /* thinner progress track */
+    background: rgba(255,255,255,0.12);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+}
+
+.audio-progress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0%;
+    background: #fff;
+    opacity: 0.95;
+}
+
+.audio-controls-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;         /* slightly smaller text */
+    color: #fff;
+    min-width: 76px;           /* less width reserved */
+    justify-content: flex-end;
+}
+
+.audio-time.total { color: rgba(255,255,255,0.8); }
+.audio-sep { color: rgba(255,255,255,0.5); }
+
+/* Mobile tweaks */
+@media (max-width: 520px) {
+    .audio-bar { padding: 8px; gap: 10px; border-radius: 10px; }
+    .audio-bar .audio-play { width: 32px; height: 32px; }
+    .audio-progress-wrap { height: 5px; }
+}
+
+.projects-section {
+    background-color: white;
+    flex-direction: column;
+    padding: 80px 40px;
+}
+
+h1 {
+    font-size: 5rem;
+    font-weight: 700;
+    color: black;
+    letter-spacing: -0.02em;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                color 0.3s ease;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: #555;
+    text-align: center;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                color 0.3s ease;
+}
+
+.cursor-dot {
+    width: 8px;
+    height: 8px;
+    background-color: white;
+    border-radius: 50%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 10000;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    mix-blend-mode: difference;
+}
+
+.cursor-dot.magnify {
+    width: 150px;
+    height: 150px;
+}
+
+.cursor-outline {
+    width: 40px;
+    height: 40px;
+    border: 2px solid rgb(255, 255, 255);
+    border-radius: 50%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                border 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                opacity 0.5s ease;
+    opacity: 1;
+    mix-blend-mode: difference;
+}
+
+.cursor-outline.magnify {
+    width: 180px;
+    height: 180px;
+    border: 3px solid black;
+}
+
+.cursor-outline.idle {
+    opacity: 0;
+}
+
+.scroll-arrow {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) rotate(180deg);
+    font-size: 2.5rem;
+    color: black;
+    transition: all 0.3s ease;
+    animation: bounce 2s infinite;
+}
+
+.scroll-arrow.cursor-hover {
+    transform: translateX(-50%) rotate(180deg) scale(1.15);
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateX(-50%) rotate(180deg) translateY(0);
+    }
+    50% {
+        transform: translateX(-50%) rotate(180deg) translateY(-10px);
+    }
+}
+
+.projects-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 60px;
+    text-align: center;
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    width: 100%;
+}
+
+.project-card {
+    background: white;
+    border-radius: 20px;
+    padding: 0;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.project-card img {
+    width: 50%;
+    height: 130px;
+    object-fit: contain;
+    margin-left: 25%;
+    margin-top: 10%;
+    display: block;
+}
+
+.project-card-content {
+    padding: 30px;
+}
+
+.project-card h3 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 15px;
+}
+
+.project-card p {
+    font-size: 1rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    h1 {
+        font-size: 3rem;
+    }
+    
+    h2 {
+        font-size: 1.2rem;
+    }
+    
+    .projects-title {
+        font-size: 2rem;
+        margin-left: 60%;
+    }
+    
+    .projects-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .scroll-arrow {
+        font-size: 2rem;
+    }
+    
+    .video-section {
+        flex-direction: column;
+        gap: 40px;
+    }
+    
+    .video-container {
+        max-width: 100%;
+    }
+    
+    .video-text {
+        max-width: 100%; /* Changed for better responsiveness */
+        text-align: justify;
+    }
+    
+    .video-text h2 {
+        text-align: justify;
+        font-size: 2rem;
+    }
+}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio - Youness Berkia</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <section class="section hero-section">
+        <!-- original static chart removed — network nodes remain -->
+
+        <h1>Youness Berkia</h1>
+        <h2>
+            <span class="sb-before">Bewerbung für das </span>
+            <span id="sb-animated">Statistische Bundesamt</span>
+            <span class="sb-after"> in Wiesbaden</span>
+        </h2>
+        <div class="scroll-arrow">^</div>
+    </section>
+
+    <section class="section video-section">
+        <div class="video-container">
+            <video controls>
+                <source src="video.mp4" type="video/mp4">
+                Ihr Browser unterstützt das Video-Tag nicht.
+            </video>
+        </div>
+        <div class="video-text">
+            <h2>Prototyp: Smarter Nachttisch</h2>
+            <p>Zu erkennen ist hier der erste Prototyp des Nachttischs mit RFID-Zugang und motorisiertem Schubladensystem.</p>
+            <p>Die Motorfunktion sowie der RFID-Zugang werden von einem Arduino Uno übernommen. Sobald dieser den Zugang ermöglicht, kommuniziert der Uno mit dem Raspberry Pi Pico W, welcher später über einem integrierten Display über eine API die Wetterdaten abruft und anzeigt. Die Stimmen sind zuvor auf dem PC mit der tortoise repo lokal generiert worden, extrem komprimiert und direkt auf den Speicher des Microcontrollers geladen.</p>
+
+            <!-- Audio player for smartdesk transcript -->
+            <div class="audio-bar" aria-label="Audio player Smart Nachttisch">
+                <audio id="smartdesk-audio" preload="metadata">
+                    <source src="smartdesk.mp3" type="audio/mpeg">
+                    Ihr Browser unterstützt das Audio-Tag nicht.
+                </audio>
+
+                <button class="audio-play" id="audio-play" aria-label="Play" title="Play">
+                    <span class="audio-icon" aria-hidden="true"></span>
+                </button>
+
+                <div class="audio-progress-wrap" id="audio-progress-wrap">
+                    <div class="audio-progress" id="audio-progress"></div>
+                </div>
+
+                <div class="audio-controls-right">
+                    <span class="audio-time" id="audio-current">0:00</span>
+                    <span class="audio-sep">/</span>
+                    <span class="audio-time total" id="audio-duration">0:00</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section projects-section">
+        <h2 class="projects-title">Projekte</h2>
+        <div class="projects-grid">
+            <div class="project-card">
+                <img src="project1.jpg" alt="File Organizer" onerror="this.style.display='none'">
+                <div class="project-card-content">
+                    <h3>File Organizer</h3>
+                    <p>Ein automationsskript zur effizienten Organisation und Sortierung von Dateien in ihre jeweiligen Ordner basierend auf Typ, Datum und Name. Dadurch konnte ich meine große Menge an Dokumenten während des Abiturs besser verwalten.</p>
+                </div>
+            </div>
+            <div class="project-card">
+                <img src="project2.jpg" alt="Smarter Nachttisch" onerror="this.style.display='none'">
+                <div class="project-card-content">
+                    <h3>Smarter Nachttisch</h3>
+                    <p>IoT-Nachttisch mit RFID-Zugang und motorisiertem Schubladensystem. Zusätzliche Funktionen umfassen eine syntesische Sprachausgabe und Wetterinformationsabrufe mittels eines Arduino Uno und Raspberry Pi Pico.</p>
+                </div>
+            </div>
+            <div class="project-card">
+                <img src="project3.jpg" alt="Local AI Assistant" onerror="this.style.display='none'">
+                <div class="project-card-content">
+                    <h3>Local AI Assistant</h3>
+                    <p>Privater KI-Assistent, der vollständig lokal über Ollama (gemma3:4b) läuft und Daten auf dem Gerät behält. Die Sprachausgabe wurde mit Chatterbox generiert und konnte jede beliebige Stimme mittels eines 15 sekunden Samples nachahmen.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
