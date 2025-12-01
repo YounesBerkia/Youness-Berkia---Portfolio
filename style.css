@@ -45,7 +45,7 @@ body {
 .chart-network {
     position: absolute;
     inset: 0; /* fill hero */
-    pointer-events: none;
+        pointer-events: none; /* keep container non-interactive, allow nodes to handle events */
     z-index: 0;
 }
 
@@ -57,7 +57,10 @@ body {
     align-items: center;
     justify-content: center;
     transform-origin: center;
-    transition: transform 220ms cubic-bezier(.2,.9,.3,1);
+        transition: transform 220ms cubic-bezier(.2,.9,.3,1);
+        /* allow node to accept pointer events for dragging */
+        pointer-events: auto;
+        cursor: grab;
     opacity: 0.95;
 }
 
@@ -102,6 +105,17 @@ body {
 
 /* nodes lightly emphasize when active */
 .chart-node.active { transform: translateY(-6px) scale(1.02); }
+.chart-node:active { cursor: grabbing; }
+.chart-node.dragging {
+    /* remove rectangular box shadow (it makes an ugly rectangle around the node)
+       and use a drop-shadow on the inner bars cluster for a natural shadow shape */
+    box-shadow: none;
+}
+
+.chart-node.dragging .chart-bars {
+    /* shadow follows bars cluster shape, not the rectangular node container */
+    filter: drop-shadow(0 10px 24px rgba(0,0,0,0.16));
+}
 
 @media (max-width: 820px) {
     .chart-node { width: 72px; height: 72px; }
@@ -382,7 +396,7 @@ h2 {
     top: 0;
     left: 0;
     pointer-events: none;
-    z-index: 10000;
+    z-index: 100001; /* keep cursor above overlays */
     transform: translate(-50%, -50%);
     transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                 height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -403,7 +417,7 @@ h2 {
     top: 0;
     left: 0;
     pointer-events: none;
-    z-index: 9999;
+    z-index: 100000; /* keep outline above overlays */
     transform: translate(-50%, -50%);
     transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
                 height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
@@ -463,20 +477,139 @@ h2 {
     width: 100%;
 }
 
+/* full-screen expanding overlay when opening a project */
+.project-overlay {
+    position: fixed;
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    z-index: 99999;
+    pointer-events: none;
+}
+
+.project-overlay .overlay-circle {
+    position: absolute;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: #000; transform: translate(-50%, -50%) scale(0);
+    /* smoother ease-in-out and slightly slower for a less rigid expansion */
+    transition: transform 760ms cubic-bezier(0.4, 0.0, 0.2, 1), opacity 420ms ease;
+    will-change: transform, opacity;
+    pointer-events: none;
+}
+
+.project-overlay.open { pointer-events: auto; }
+.project-overlay.open .overlay-circle { transform: translate(-50%, -50%) scale(150); opacity: 1; }
+
+/* content reveal after circle expanded */
+.project-overlay .overlay-content {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 480ms cubic-bezier(0.4,0,0.2,1) 360ms; pointer-events: none;
+}
+.project-overlay.open .overlay-content { opacity: 1; pointer-events: auto; }
+
+/* inside overlay: layout a video centered but shifted left like the video-section */
+.overlay-inner {
+    display: flex; gap: 48px; align-items: center; justify-content: center; width: 100%; max-width: 1100px; padding: 20px;
+}
+.overlay-inner .overlay-video { flex: 1; display:flex; justify-content:center; align-items:center; max-width:800px; }
+.overlay-inner .overlay-video { padding: 0; background: transparent; border-radius: 20px; display:flex; align-items:center; justify-content:center; max-width: 680px; }
+.overlay-inner .overlay-video video { width: 100%; height: auto; border-radius: 20px; /* softened glow and thin macOS-like glass outline */
+    box-shadow: 0 24px 64px rgba(0,0,0,0.56), 0 0 28px rgba(255,255,255,0.26), 0 0 90px rgba(255,255,255,0.12);
+    outline: 1px solid rgba(255,255,255,0.14);
+    outline-offset: 6px; /* small offset so it's like a thin rim beyond the glow */
+}
+
+/* animated starfield behind the overlay video */
+.overlay-stars { position:absolute; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.overlay-stars .star {
+    position:absolute;
+    width: 2px; height: 2px; border-radius:50%;
+    background: rgba(255,255,255,0.95);
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.36));
+    opacity: 0.06; /* base faint */
+    transform: translateZ(0);
+}
+
+/* larger stars variant */
+.overlay-stars .star.big { width: 3px; height: 3px; filter: drop-shadow(0 0 18px rgba(255,255,255,0.44)); }
+
+/* a faint gradient so stars have depth while flying through */
+.project-overlay::before {
+    content: '';
+    position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse at 40% 30%, rgba(255,255,255,0.02), transparent 12%), radial-gradient(ellipse at 70% 70%, rgba(255,255,255,0.02), transparent 10%);
+    mix-blend-mode: screen;
+}
+
+
+/* hide other cards when showing overlay */
+.projects-section.zoomed .projects-grid { display: flex; align-items: center; justify-content: center; }
+.projects-section.zoomed .project-card { opacity: 0; transform: scale(0.8); pointer-events: none; transition: all 200ms ease; }
+.projects-section.zoomed .project-card[data-project="ai-assistant"] { opacity: 1; transform: scale(1); pointer-events: auto; }
+
+/* close button */
+.overlay-close {
+    position: absolute; right: 20px; top: 18px; z-index: 3; background: rgba(255,255,255,0.06); color: #fff; border: none;
+    width: 44px; height: 44px; border-radius: 999px; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter: blur(6px);
+}
+
+/* small responsive adjustments */
+@media (max-width: 820px) {
+    .overlay-inner { gap: 20px; padding: 12px; }
+    .overlay-inner .overlay-video { max-width: 420px; }
+}
+
 .project-card {
     background: white;
     border-radius: 20px;
     padding: 0;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+     /* only animate shadow by default; transform animations are handled explicitly
+         so we avoid conflicts between transitions and CSS animations which can
+         cause jitter when a transform animation ends. */
+     transition: box-shadow 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     border: 1px solid #f0f0f0;
 }
 
-.project-card:hover {
+.project-card:not(.expanding) {
+    /* animate transforms only when not actively animating */
+    transition: transform 220ms cubic-bezier(0.22,0.9,0.28,1), box-shadow 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.project-card:not(.expanding):hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
+
+/* File Organizer jump animation: knee-bend and powerful jump then soft bounce */
+/* Click-expand animation for File Organizer (short, smooth expand then revert) */
+.project-card.expanding {
+    /* Use GPU-friendly properties and ensure the element uses the animation's
+       full sequence (fill-mode both) so we don't rely on transitions that can
+       interfere at the end. */
+    will-change: transform, opacity;
+    transform-origin: center center;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    /* shorter, more controlled timing and a smoother easing curve */
+    animation: expand-click 360ms cubic-bezier(0.165, 0.84, 0.44, 1) both;
+}
+
+@keyframes expand-click {
+    0% { transform: translate3d(0,0,0) scale(1); }
+    28% { transform: translate3d(0,-6px,0) scale(1.045); }
+    62% { transform: translate3d(0,-3px,0) scale(1.02); }
+    100% { transform: translate3d(0,0,0) scale(1); }
+}
+
+/* Respect user's reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .project-card.expanding { animation: none !important; transform: none !important; }
+    .project-card:not(.expanding) { transition: none !important; }
+}
+
+/* Smarter Nachttisch: drop-down movement and arrow indicator */
+
+/* Dropped/arrow interaction removed — click will instead scroll the page up. */
 
 .project-card img {
     width: 50%;

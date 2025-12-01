@@ -285,6 +285,337 @@ animateOutline();
     // store to window scope for the animation loop to reference
     window.__chartNetwork = { nodes, lines, svg, container: network };
 })();
+
+/* ---------- Project expand to video (AI Agent) ---------- */
+(() => {
+    const projectsSection = document.querySelector('.projects-section');
+    if (!projectsSection) return;
+
+    const aiCard = document.querySelector('.project-card[data-project="ai-assistant"]');
+    if (!aiCard) return;
+
+    // create overlay container and elements
+    const overlay = document.createElement('div');
+    overlay.className = 'project-overlay';
+
+    const circle = document.createElement('div');
+    circle.className = 'overlay-circle';
+    overlay.appendChild(circle);
+
+    const content = document.createElement('div');
+    content.className = 'overlay-content';
+
+    // starfield background (created inside overlay so it appears behind content)
+    const starsWrap = document.createElement('div');
+    starsWrap.className = 'overlay-stars';
+    overlay.appendChild(starsWrap);
+
+    const inner = document.createElement('div');
+    inner.className = 'overlay-inner';
+
+    const videoWrap = document.createElement('div');
+    videoWrap.className = 'overlay-video';
+    const videoEl = document.createElement('video');
+    videoEl.src = 'AiAgent.mp4';
+    videoEl.controls = true;
+    videoEl.autoplay = true;
+    // unmute by default (user clicked to open — playback should be allowed)
+    videoEl.muted = false;
+    videoEl.playsInline = true;
+    videoWrap.appendChild(videoEl);
+
+    inner.appendChild(videoWrap);
+    content.appendChild(inner);
+    overlay.appendChild(content);
+
+    // close button
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'overlay-close';
+    closeBtn.title = 'Close';
+    closeBtn.innerHTML = '✕';
+    overlay.appendChild(closeBtn);
+
+    document.body.appendChild(overlay);
+
+    /* create a small starfield - will animate opacity/radii for a gentle sparkle */
+    const STAR_COUNT = 140; // more stars for denser field
+    const stars = [];
+    function initStars() {
+        // clear
+        starsWrap.innerHTML = '';
+        for (let i = 0; i < STAR_COUNT; i++) {
+            const s = document.createElement('div');
+            s.className = 'star' + (Math.random() < 0.14 ? ' big' : '');
+            const x = Math.random() * 100;
+            const y = Math.random() * 100;
+            s._x = x;
+            s._y = y;
+            s.style.left = x + '%';
+            s.style.top = y + '%';
+            // random base opacity, stronger base
+            s._base = 0.04 + Math.random() * 0.28; // stronger base
+            s.style.opacity = s._base;
+            // small drifting velocity (percent per second)
+            s.vx = (Math.random() * 0.02 - 0.01); // -0.01..0.01
+            s.vy = 0.02 + Math.random() * 0.06; // downward drift
+            s._pulse = 0; s._pulseTarget = s._base;
+            starsWrap.appendChild(s);
+            stars.push(s);
+        }
+    }
+
+    initStars();
+
+    // star sparkle loop - random gentle pulses
+    // animate stars: drift + occasional pulses using requestAnimationFrame
+    let starsRunning = false;
+    let starsLast = 0;
+    let starAnimId = null;
+
+    function animateStars(timestamp) {
+        if (!starsRunning) return;
+        if (!starsLast) starsLast = timestamp;
+        const dt = (timestamp - starsLast) / 1000; // seconds
+        starsLast = timestamp;
+
+        for (const s of stars) {
+            // move star (percent space)
+            s._x += s.vx * dt * 100; // percent per second scaled
+            s._y += s.vy * dt * 100;
+            // wrap-around edges
+            if (s._x > 100) s._x -= 100; if (s._x < 0) s._x += 100;
+            if (s._y > 120) s._y -= 120; // allow some wrap slightly off-screen
+            // update CSS
+            s.style.left = s._x + '%';
+            s.style.top = s._y + '%';
+
+            // occasional pulse target
+            if (Math.random() < 0.006) {
+                s._pulseTarget = Math.min(1.4, s._base * (1.8 + Math.random()*1.6));
+            }
+            // relax pulse target slowly to base
+            if (s._pulseTarget > s._base) s._pulseTarget -= dt * 0.6;
+            s._pulse += (s._pulseTarget - s._pulse) * Math.min(0.45, dt * 6);
+            const opacity = Math.max(0.01, Math.min(1, s._base + s._pulse * 0.9));
+            s.style.opacity = opacity.toFixed(3);
+            const scale = 1 + Math.min(1.2, s._pulse * 0.8);
+            s.style.transform = `scale(${scale})`;
+        }
+
+        starAnimId = requestAnimationFrame(animateStars);
+    }
+
+    function startStars() { if (!starsRunning) { starsRunning = true; starsLast = 0; starAnimId = requestAnimationFrame(animateStars); } }
+    function stopStars() { starsRunning = false; if (starAnimId) { cancelAnimationFrame(starAnimId); starAnimId = null; } }
+
+    let active = false;
+
+    function openFromCard(cardEl) {
+        if (active) return;
+        active = true;
+
+        // position circle at card center
+        const rect = cardEl.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        circle.style.left = cx + 'px';
+        circle.style.top = cy + 'px';
+
+        // show overlay and animate
+        overlay.classList.add('open');
+        // force reflow
+        void circle.offsetHeight;
+
+        // hide other project cards visually
+        projectsSection.classList.add('zoomed');
+
+        // allow pointer interactions now
+        overlay.addEventListener('transitionend', function onEnd(e) {
+            if (e.target === circle) {
+                // focus video playback
+                try { videoEl.play(); } catch (e) {}
+            }
+        }, { once: true });
+        // remove any residual mute and ensure audio can be heard
+        try { videoEl.muted = false; } catch (e) {}
+        // start star animation
+        startStars();
+    }
+
+    function closeOverlay() {
+        if (!active) return;
+        active = false;
+
+        // pause video
+        try { videoEl.pause(); } catch (e) {}
+        // remove open class to collapse circle
+        overlay.classList.remove('open');
+        // unzoom projects
+        projectsSection.classList.remove('zoomed');
+        // stop star animation
+        stopStars();
+    }
+
+    // clicking the ai card triggers the expand
+    aiCard.addEventListener('click', (e) => {
+        openFromCard(aiCard);
+    });
+
+        // ----- PROJECT CARD ACTIONS (jump / drop) -----
+        // file organizer jump
+        const fileCard = document.querySelector('.project-card[data-project="file-organizer"]');
+        if (fileCard) {
+            fileCard.addEventListener('click', (e) => {
+                // If an animation is already running, ignore further clicks until it finishes
+                if (fileCard.classList.contains('expanding')) return;
+
+                // add the expanding class which triggers a short expand animation, then remove
+                fileCard.classList.add('expanding');
+                function onEnd() {
+                    fileCard.classList.remove('expanding');
+                    fileCard.removeEventListener('animationend', onEnd);
+                }
+                fileCard.addEventListener('animationend', onEnd);
+            });
+        }
+
+        // smarter nachttisch drop + arrow
+        const smarterCard = document.querySelector('.project-card[data-project="smarter-nachttisch"]');
+        if (smarterCard) {
+            smarterCard.addEventListener('click', (e) => {
+                // simplified behaviour: scroll the related section into view (move page up)
+                // remove the previous 'drop' + arrow animation logic to reduce visual clutter
+                const proto = document.querySelector('.video-section');
+                if (proto) proto.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        }
+
+    closeBtn.addEventListener('click', closeOverlay);
+
+    // also close on click outside content
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay || e.target === circle) {
+            closeOverlay();
+        }
+    });
+})();
+// DRAG INTERACTION FOR NODES
+(() => {
+    const net = window.__chartNetwork;
+    if (!net) return;
+
+    let dragging = null; // { node, startX, startY, offsetX, offsetY }
+    const maxRadius = 40; // px - how far a node can be dragged from its anchor
+
+    function onPointerDown(e) {
+        if (e.button !== undefined && e.button !== 0) return; // only left click
+        const nodeEl = e.currentTarget;
+        const id = Number(nodeEl.dataset.id);
+        if (Number.isNaN(id)) return;
+
+        // capture layout center as anchor point
+        const rect = nodeEl.getBoundingClientRect();
+        const anchorX = rect.left + rect.width/2;
+        const anchorY = rect.top + rect.height/2;
+
+        const startX = e.clientX;
+        const startY = e.clientY;
+
+        // attach dragging state
+        dragging = { id, node: net.nodes[id], anchorX, anchorY, startX, startY };
+        // mark node as being dragged so animation loop can skip shove logic for it
+        dragging.node.dragging = true;
+
+        // slightly increase pointer capture feel
+        nodeEl.classList.add('dragging');
+
+        // prevent text selection while dragging
+        e.preventDefault();
+    }
+
+    function onPointerMove(e) {
+        if (!dragging) return;
+        const { id, node, anchorX, anchorY, startX, startY } = dragging;
+        const nodeEl = node.el;
+
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        // clamp to radius
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const angle = Math.atan2(dy, dx);
+        const clampedDist = Math.min(maxRadius, dist);
+        const tx = Math.cos(angle) * clampedDist;
+        const ty = Math.sin(angle) * clampedDist;
+
+        // apply directly to node velocity target, leave smoothing to animation loop
+        node.vx = tx;
+        node.vy = ty;
+
+        // update connected line stroke emphasis while dragging
+        const netLines = net.lines;
+        if (netLines) {
+            // emphasize lines connected to this node
+            netLines.forEach(l => {
+                if (l.a === id || l.b === id) {
+                    l.el.style.strokeWidth = '2.2';
+                    l.el.style.opacity = '1';
+                }
+            });
+        }
+    }
+
+    function onPointerUp(e) {
+        if (!dragging) return;
+        const { id, node } = dragging;
+
+        // on release: let smoothing return vx/vy to 0 (snap back)
+        // we simply clear the dragging hint and reset dragging state
+        node.el.classList.remove('dragging');
+
+        // restore connected lines to normal state over time
+        const netLines = net.lines;
+        if (netLines) {
+            netLines.forEach(l => {
+                if (l.a === id || l.b === id) {
+                    // gradually reset style (animation loop will also modify strokeWidth/opac)
+                    l.el.style.strokeWidth = '';
+                    l.el.style.opacity = '';
+                }
+            });
+        }
+
+        // clear dragging flag on node and request a snap-back so the node returns to its anchor
+        if (node) {
+            node.dragging = false;
+            node.snapBack = true;
+        }
+        dragging = null;
+    }
+
+    // wire up on each node el
+    net.nodes.forEach(({ el }, idx) => {
+        // support mouse drag
+        el.addEventListener('mousedown', onPointerDown);
+
+        // support touch
+        el.addEventListener('touchstart', (ev) => {
+            const t = ev.touches[0];
+            // mimic pointerdown with touch coords
+            onPointerDown({ currentTarget: el, clientX: t.clientX, clientY: t.clientY, button: 0, preventDefault: () => ev.preventDefault() });
+        }, { passive: false });
+        // touchstart attached to element above; global touchmove/end will be bound once below
+    });
+
+    // bind global pointer listeners once
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup', onPointerUp);
+    window.addEventListener('touchmove', (ev) => {
+        if (!dragging) return;
+        const t = ev.touches[0];
+        onPointerMove({ clientX: t.clientX, clientY: t.clientY });
+    }, { passive: false });
+    window.addEventListener('touchend', onPointerUp);
+})();
 const chartItems = Array.from(document.querySelectorAll('.chart-item'));
 const chartBars = chartItems.map(item => item.querySelector('.chart-bar'));
 const chartLabels = chartItems.map(item => item.querySelector('.chart-label'));
@@ -375,9 +706,19 @@ if (chartBars.length) {
                 const tx = (dist > 0) ? (dx / dist) * push : 0;
                 const ty = (dist > 0) ? (dy / dist) * push : 0;
 
-                // smoothing
-                node.vx += (tx - node.vx) * 0.22;
-                node.vy += (ty - node.vy) * 0.22;
+                // if snapBack requested, smoothly return to zero translate (anchor)
+                if (node.snapBack) {
+                    node.vx += (0 - node.vx) * 0.32;
+                    node.vy += (0 - node.vy) * 0.32;
+                    // small threshold to finish snap back
+                    if (Math.abs(node.vx) < 0.6 && Math.abs(node.vy) < 0.6) {
+                        node.vx = 0; node.vy = 0; node.snapBack = false;
+                    }
+                } else if (!node.dragging) {
+                    // smoothing towards shove target
+                    node.vx += (tx - node.vx) * 0.22;
+                    node.vy += (ty - node.vy) * 0.22;
+                }
 
                 // keep base scale in transform; we add translate offsets
                 const baseScale = node.cfg && node.cfg.scale ? node.cfg.scale : 1;
@@ -522,6 +863,6 @@ document.addEventListener('mouseenter', () => {
     // start on load after a small delay so it isn't abrupt
     setTimeout(() => runScramble(), 2200);
 
-    // repeat every 20 seconds
-    setInterval(() => runScramble(), 20_000);
+    // repeat every 10 seconds
+    setInterval(() => runScramble(), 10_000);
 })();
